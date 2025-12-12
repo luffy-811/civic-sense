@@ -1,8 +1,3 @@
-/**
- * Admin Dashboard Page
- * Professional overview statistics and recent issues
- */
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -14,7 +9,9 @@ import {
   ChartBarIcon,
   ArrowTrendingUpIcon,
   EyeIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  UserGroupIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline';
 import { statsAPI, issuesAPI } from '@/lib/api';
 import { Issue, CATEGORY_LABELS, STATUS_LABELS, SEVERITY_LABELS } from '@/types';
@@ -22,40 +19,32 @@ import { formatDistanceToNow } from 'date-fns';
 import clsx from 'clsx';
 
 interface StatsOverview {
-  totalIssues: number;
-  pendingIssues: number;
-  inProgressIssues: number;
-  resolvedIssues: number;
-  verifiedIssues: number;
-  averageResolutionTime: number;
-  issuesByCategory: { _id: string; count: number }[];
-  issuesBySeverity: { _id: string; count: number }[];
-  issuesByStatus: { _id: string; count: number }[];
-  recentIssues: Issue[];
+  total: number;
+  pending: number;
+  verified: number;
+  in_progress: number;
+  resolved: number;
+  rejected: number;
+  activeCitizens: number;
 }
 
-export default function AdminDashboard() {
+export default function AdminDashboardPage() {
   const [stats, setStats] = useState<StatsOverview | null>(null);
   const [recentIssues, setRecentIssues] = useState<Issue[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchData();
+    fetchDashboardData();
   }, []);
 
-  const fetchData = async () => {
+  const fetchDashboardData = async () => {
     try {
       const [statsRes, issuesRes] = await Promise.all([
         statsAPI.getOverview(),
         issuesAPI.getAll({ limit: 5, sortBy: 'createdAt', sortOrder: 'desc' })
       ]);
-
-      if (statsRes.data.success) {
-        setStats(statsRes.data.data);
-      }
-      if (issuesRes.data.success) {
-        setRecentIssues(issuesRes.data.data.issues);
-      }
+      if (statsRes.data.success) setStats(statsRes.data.data);
+      if (issuesRes.data.success) setRecentIssues(issuesRes.data.data.issues);
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
     } finally {
@@ -63,265 +52,238 @@ export default function AdminDashboard() {
     }
   };
 
+  const statCards = stats ? [
+    { name: 'Total Issues', value: stats.total, icon: ChartBarIcon, gradient: 'from-violet-500 to-purple-600', bgGlow: 'bg-violet-500' },
+    { name: 'Pending', value: stats.pending, icon: ClockIcon, gradient: 'from-amber-400 to-orange-500', bgGlow: 'bg-amber-500' },
+    { name: 'In Progress', value: stats.in_progress, icon: ArrowTrendingUpIcon, gradient: 'from-blue-500 to-cyan-500', bgGlow: 'bg-blue-500' },
+    { name: 'Resolved', value: stats.resolved, icon: CheckCircleIcon, gradient: 'from-emerald-400 to-teal-500', bgGlow: 'bg-emerald-500' },
+    { name: 'Citizens', value: stats.activeCitizens, icon: UserGroupIcon, gradient: 'from-pink-500 to-rose-500', bgGlow: 'bg-pink-500' }
+  ] : [];
+
   if (loading) {
     return (
-      <div className="space-y-6">
-        {/* Header skeleton */}
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-48 mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-64"></div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-white rounded-2xl p-6 shadow-sm animate-pulse">
-              <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
-              <div className="h-10 bg-gray-200 rounded w-1/3"></div>
-            </div>
-          ))}
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <div className="relative w-16 h-16 mx-auto mb-4">
+            <div className="absolute inset-0 rounded-full border-4 border-purple-500/30"></div>
+            <div className="absolute inset-0 rounded-full border-4 border-purple-400 border-t-transparent animate-spin"></div>
+          </div>
+          <p className="text-purple-200/70">Loading dashboard...</p>
         </div>
       </div>
     );
   }
 
-  const statCards = [
-    {
-      name: 'Total Issues',
-      value: stats?.totalIssues || 0,
-      icon: ExclamationCircleIcon,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-      borderColor: 'border-blue-200',
-      gradient: 'from-blue-500 to-blue-600',
-    },
-    {
-      name: 'Pending',
-      value: stats?.pendingIssues || 0,
-      icon: ClockIcon,
-      color: 'text-amber-600',
-      bgColor: 'bg-amber-50',
-      borderColor: 'border-amber-200',
-      gradient: 'from-amber-500 to-amber-600',
-    },
-    {
-      name: 'In Progress',
-      value: stats?.inProgressIssues || 0,
-      icon: ArrowTrendingUpIcon,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-      borderColor: 'border-purple-200',
-      gradient: 'from-purple-500 to-purple-600',
-    },
-    {
-      name: 'Resolved',
-      value: stats?.resolvedIssues || 0,
-      icon: CheckCircleIcon,
-      color: 'text-emerald-600',
-      bgColor: 'bg-emerald-50',
-      borderColor: 'border-emerald-200',
-      gradient: 'from-emerald-500 to-emerald-600',
-    },
-  ];
-
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="mt-1 text-gray-500">Overview of civic issues and statistics</p>
-        </div>
-        <button
-          onClick={fetchData}
-          className="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
-        >
-          <ArrowPathIcon className="w-4 h-4 mr-2" />
-          Refresh Data
-        </button>
+    <div className="relative">
+      {/* Background decorations */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 -left-40 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 right-1/4 w-80 h-80 bg-pink-500/10 rounded-full blur-3xl"></div>
       </div>
 
-      {/* Stat Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statCards.map((stat) => (
-          <div 
-            key={stat.name} 
-            className={clsx(
-              'relative overflow-hidden bg-white rounded-2xl p-6 shadow-sm border transition-all duration-200 hover:shadow-md',
-              stat.borderColor
-            )}
+      <div className="relative p-4 sm:p-6 lg:p-8 space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-2">
+              <SparklesIcon className="w-7 h-7 text-purple-400" />
+              Dashboard
+            </h1>
+            <p className="mt-1 text-sm text-purple-200/60">Monitor and manage civic issues</p>
+          </div>
+          <button 
+            onClick={fetchDashboardData} 
+            className="inline-flex items-center justify-center px-4 py-2.5 bg-white/10 backdrop-blur text-white text-sm font-medium rounded-xl border border-white/10 hover:bg-white/20 transition-all active:scale-95"
           >
-            <div className="flex items-start justify-between">
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-gray-500">{stat.name}</p>
-                <p className="text-4xl font-bold text-gray-900">{stat.value}</p>
-              </div>
-              <div className={clsx('p-3 rounded-xl', stat.bgColor)}>
-                <stat.icon className={clsx('w-6 h-6', stat.color)} />
-              </div>
-            </div>
-            {/* Decorative gradient bar */}
-            <div className={clsx('absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r', stat.gradient)} />
-          </div>
-        ))}
-      </div>
-
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Issues by Category */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <h2 className="text-lg font-semibold text-gray-900 mb-6">Issues by Category</h2>
-          <div className="space-y-4">
-            {stats?.issuesByCategory?.map((cat) => (
-              <div key={cat._id} className="group">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">
-                    {CATEGORY_LABELS[cat._id as keyof typeof CATEGORY_LABELS] || cat._id}
-                  </span>
-                  <span className="text-sm font-semibold text-gray-900">
-                    {cat.count}
-                  </span>
-                </div>
-                <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-primary-500 to-primary-600 rounded-full transition-all duration-500"
-                    style={{
-                      width: `${(cat.count / (stats.totalIssues || 1)) * 100}%`
-                    }}
-                  />
-                </div>
-              </div>
-            )) || (
-              <p className="text-gray-500 text-sm">No data available</p>
-            )}
-          </div>
+            <ArrowPathIcon className="w-4 h-4 mr-2" />
+            Refresh
+          </button>
         </div>
 
-        {/* Issues by Severity */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <h2 className="text-lg font-semibold text-gray-900 mb-6">Issues by Severity</h2>
-          <div className="space-y-4">
-            {stats?.issuesBySeverity?.map((sev) => {
-              const colorConfig = {
-                low: { bg: 'bg-emerald-100', bar: 'from-emerald-400 to-emerald-500', text: 'text-emerald-700' },
-                medium: { bg: 'bg-amber-100', bar: 'from-amber-400 to-amber-500', text: 'text-amber-700' },
-                high: { bg: 'bg-orange-100', bar: 'from-orange-400 to-orange-500', text: 'text-orange-700' },
-                critical: { bg: 'bg-red-100', bar: 'from-red-400 to-red-500', text: 'text-red-700' }
-              };
-              const config = colorConfig[sev._id as keyof typeof colorConfig] || { bg: 'bg-gray-100', bar: 'from-gray-400 to-gray-500', text: 'text-gray-700' };
-              
-              return (
-                <div key={sev._id} className="group">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className={clsx('text-sm font-medium px-2 py-0.5 rounded-md', config.bg, config.text)}>
-                      {SEVERITY_LABELS[sev._id as keyof typeof SEVERITY_LABELS] || sev._id}
-                    </span>
-                    <span className="text-sm font-semibold text-gray-900">
-                      {sev.count}
-                    </span>
-                  </div>
-                  <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div
-                      className={clsx('h-full rounded-full bg-gradient-to-r transition-all duration-500', config.bar)}
-                      style={{
-                        width: `${(sev.count / (stats.totalIssues || 1)) * 100}%`
-                      }}
-                    />
-                  </div>
-                </div>
-              );
-            }) || (
-              <p className="text-gray-500 text-sm">No data available</p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Issues Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="px-6 py-5 border-b border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900">Recent Issues</h2>
-              <p className="text-sm text-gray-500 mt-1">Latest reported civic issues</p>
-            </div>
-            <Link 
-              href="/admin/issues" 
-              className="inline-flex items-center px-4 py-2 text-sm font-medium text-primary-600 bg-primary-50 rounded-xl hover:bg-primary-100 transition-colors"
+        {/* Stats Grid - Responsive */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+          {statCards.map((stat, idx) => (
+            <div 
+              key={stat.name} 
+              className="group relative overflow-hidden bg-white/5 backdrop-blur-xl rounded-2xl p-4 sm:p-5 border border-white/10 hover:bg-white/10 transition-all duration-300 hover:scale-[1.02]"
             >
-              View all
-              <EyeIcon className="w-4 h-4 ml-2" />
-            </Link>
-          </div>
+              {/* Glow effect */}
+              <div className={clsx('absolute -top-8 -right-8 w-20 h-20 rounded-full opacity-30 blur-2xl transition-opacity group-hover:opacity-50', stat.bgGlow)}></div>
+              
+              <div className="relative">
+                <div className={clsx('inline-flex p-2.5 rounded-xl bg-gradient-to-br mb-3', stat.gradient)}>
+                  <stat.icon className="w-5 h-5 text-white" />
+                </div>
+                <p className="text-2xl sm:text-3xl font-bold text-white">{stat.value}</p>
+                <p className="text-xs sm:text-sm text-purple-200/60 mt-0.5">{stat.name}</p>
+              </div>
+              
+              {/* Bottom accent */}
+              <div className={clsx('absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r opacity-60', stat.gradient)}></div>
+            </div>
+          ))}
         </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="bg-gray-50/50">
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Issue
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Category
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Severity
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Reported
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {recentIssues.length > 0 ? (
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
+          {/* Recent Issues - Takes 2 columns on xl */}
+          <div className="xl:col-span-2 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden">
+            <div className="px-4 sm:px-6 py-4 border-b border-white/10 flex items-center justify-between">
+              <h2 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
+                <ExclamationCircleIcon className="w-5 h-5 text-purple-400" />
+                Recent Issues
+              </h2>
+              <Link href="/admin/issues" className="text-xs sm:text-sm text-purple-400 hover:text-purple-300 font-medium transition-colors">
+                View all 
+              </Link>
+            </div>
+            
+            <div className="divide-y divide-white/5">
+              {recentIssues.length === 0 ? (
+                <div className="p-8 sm:p-12 text-center">
+                  <ExclamationCircleIcon className="w-12 h-12 text-purple-400/30 mx-auto mb-3" />
+                  <p className="text-purple-200/50">No issues reported yet</p>
+                </div>
+              ) : (
                 recentIssues.map((issue) => (
-                  <tr key={issue._id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center">
-                        <img
-                          src={issue.imageUrl}
-                          alt=""
-                          className="w-12 h-12 rounded-xl object-cover mr-4 ring-1 ring-gray-200"
-                        />
-                        <div>
-                          <p className="text-sm font-medium text-gray-900 line-clamp-1">
-                            {issue.description?.slice(0, 50) || 'No description'}...
-                          </p>
-                          <p className="text-xs text-gray-500 mt-0.5">
-                            {issue.address?.slice(0, 30) || issue.location?.address?.slice(0, 30) || 'Location not specified'}
-                          </p>
-                        </div>
+                  <Link 
+                    key={issue._id} 
+                    href={'/issues/' + issue._id} 
+                    className="group flex items-center gap-3 sm:gap-4 p-3 sm:p-4 hover:bg-white/5 transition-all"
+                  >
+                    <img 
+                      src={issue.imageUrl} 
+                      alt="" 
+                      className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover ring-2 ring-white/10 group-hover:ring-purple-400/30 transition-all flex-shrink-0" 
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm sm:text-base text-white font-medium line-clamp-1 group-hover:text-purple-300 transition-colors">
+                        {issue.description}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <span className="text-xs text-purple-200/40">{CATEGORY_LABELS[issue.category]}</span>
+                        <span className={clsx(
+                          'px-1.5 py-0.5 text-xs font-medium rounded-md',
+                          issue.status === 'resolved' ? 'bg-emerald-500/20 text-emerald-300' : 
+                          issue.status === 'in_progress' ? 'bg-blue-500/20 text-blue-300' : 
+                          'bg-amber-500/20 text-amber-300'
+                        )}>
+                          {STATUS_LABELS[issue.status]}
+                        </span>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm font-medium text-gray-700">
-                        {CATEGORY_LABELS[issue.category]}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`badge badge-severity-${issue.severity}`}>
+                    </div>
+                    <div className="hidden sm:block text-right flex-shrink-0">
+                      <span className={clsx(
+                        'px-2 py-1 text-xs font-bold rounded-lg',
+                        issue.severity === 'critical' ? 'bg-red-500/20 text-red-300' : 
+                        issue.severity === 'high' ? 'bg-orange-500/20 text-orange-300' : 
+                        issue.severity === 'medium' ? 'bg-amber-500/20 text-amber-300' : 
+                        'bg-emerald-500/20 text-emerald-300'
+                      )}>
                         {SEVERITY_LABELS[issue.severity]}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`badge badge-status-${issue.status}`}>
-                        {STATUS_LABELS[issue.status]}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDistanceToNow(new Date(issue.createdAt), { addSuffix: true })}
-                    </td>
-                  </tr>
+                      <p className="text-xs text-purple-200/30 mt-1.5">
+                        {formatDistanceToNow(new Date(issue.createdAt), { addSuffix: true })}
+                      </p>
+                    </div>
+                    <EyeIcon className="w-4 h-4 text-purple-400/30 group-hover:text-purple-400 transition-colors hidden sm:block" />
+                  </Link>
                 ))
-              ) : (
-                <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                    No issues found
-                  </td>
-                </tr>
               )}
-            </tbody>
-          </table>
+            </div>
+          </div>
+
+          {/* Right Column */}
+          <div className="space-y-4 sm:space-y-6">
+            {/* Quick Actions */}
+            <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-4 sm:p-5">
+              <h3 className="text-base font-semibold text-white mb-4">Quick Actions</h3>
+              <div className="space-y-2">
+                <Link href="/admin/issues" className="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl hover:from-purple-500/20 hover:to-pink-500/20 transition-all group border border-transparent hover:border-purple-500/20">
+                  <div className="p-2 rounded-lg bg-purple-500/20">
+                    <ExclamationCircleIcon className="w-5 h-5 text-purple-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-white font-medium group-hover:text-purple-300">Manage Issues</p>
+                    <p className="text-xs text-purple-200/40">Review and update</p>
+                  </div>
+                </Link>
+                
+                <Link href="/admin/settings" className="flex items-center gap-3 p-3 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-xl hover:from-emerald-500/20 hover:to-teal-500/20 transition-all group border border-transparent hover:border-emerald-500/20">
+                  <div className="p-2 rounded-lg bg-emerald-500/20">
+                    <UserGroupIcon className="w-5 h-5 text-emerald-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-white font-medium group-hover:text-emerald-300">User Management</p>
+                    <p className="text-xs text-emerald-200/40">Manage authorities</p>
+                  </div>
+                </Link>
+              </div>
+            </div>
+
+            {/* Resolution Rate */}
+            {stats && (
+              <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-4 sm:p-5">
+                <h3 className="text-base font-semibold text-white mb-4">Resolution Rate</h3>
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-purple-200/60">Progress</span>
+                    <span className="text-sm font-bold text-emerald-400">
+                      {stats.total > 0 ? Math.round((stats.resolved / stats.total) * 100) : 0}%
+                    </span>
+                  </div>
+                  <div className="h-2.5 bg-white/10 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all duration-1000" 
+                      style={{ width: (stats.total > 0 ? (stats.resolved / stats.total) * 100 : 0) + '%' }}
+                    ></div>
+                  </div>
+                  <p className="text-xs text-purple-200/40 mt-2">
+                    {stats.resolved} of {stats.total} issues resolved
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Status Breakdown */}
+            {stats && (
+              <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-4 sm:p-5">
+                <h3 className="text-base font-semibold text-white mb-4">Status Breakdown</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-purple-200/60 flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+                      Pending
+                    </span>
+                    <span className="text-sm font-semibold text-white">{stats.pending}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-purple-200/60 flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-blue-400"></span>
+                      In Progress
+                    </span>
+                    <span className="text-sm font-semibold text-white">{stats.in_progress}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-purple-200/60 flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                      Resolved
+                    </span>
+                    <span className="text-sm font-semibold text-white">{stats.resolved}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-purple-200/60 flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-red-400"></span>
+                      Rejected
+                    </span>
+                    <span className="text-sm font-semibold text-white">{stats.rejected}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

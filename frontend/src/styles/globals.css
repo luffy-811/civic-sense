@@ -132,6 +132,19 @@
   .animate-pulse-slow {
     animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
+  
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+  
+  .animate-shimmer {
+    animation: shimmer 2s linear infinite;
+    background-size: 200% 100%;
+  }
 }
 
 /* Keyframe animations */
@@ -155,19 +168,40 @@
   }
 }
 
-/* Leaflet customizations */
-.leaflet-container {
-  width: 100%;
-  height: 100%;
-  z-index: 1;
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
 }
 
+@keyframes glow {
+  from {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3), 0 0 40px rgba(59, 130, 246, 0.2);
+  }
+  to {
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.5), 0 0 60px rgba(59, 130, 246, 0.3);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Leaflet Map customizations */
 .leaflet-popup-content-wrapper {
-  @apply rounded-lg shadow-lg !important;
+  @apply rounded-lg shadow-lg p-0;
 }
 
 .leaflet-popup-close-button {
-  @apply text-gray-500 hover:text-gray-700 !important;
+  @apply text-gray-500 hover:text-gray-700 text-xl;
 }
 
 /* Custom scrollbar */

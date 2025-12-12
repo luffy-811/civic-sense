@@ -381,7 +381,7 @@ router.patch('/:id', verifyToken, requireAuthority, async (req, res) => {
  */
 router.post('/:id/verify', verifyToken, async (req, res) => {
   try {
-    const issue = await Issue.findById(req.params.id);
+    let issue = await Issue.findById(req.params.id);
     
     if (!issue) {
       return res.status(404).json({
@@ -391,35 +391,56 @@ router.post('/:id/verify', verifyToken, async (req, res) => {
     }
     
     // Check if user is the reporter
-    if (issue.reportedBy.toString() === req.userId.toString()) {
+    if (issue.reportedBy && issue.reportedBy.toString() === req.userId.toString()) {
       return res.status(400).json({
         success: false,
         message: 'You cannot verify your own issue'
       });
     }
     
-    // Add verification
-    try {
-      await issue.addVerification(req.userId);
-    } catch (error) {
+    // Check if user already verified
+    if (issue.verifiedBy && issue.verifiedBy.some(id => id.toString() === req.userId.toString())) {
       return res.status(400).json({
         success: false,
-        message: error.message
+        message: 'You have already verified this issue'
       });
     }
+    
+    // Add verification directly (more reliable than method)
+    issue.verifiedBy = issue.verifiedBy || [];
+    issue.verifiedBy.push(req.userId);
+    issue.verifications = issue.verifiedBy.length;
+    
+    // Auto-mark as authentic if verifications >= 3
+    if (issue.verifications >= 3 && !issue.isAuthentic) {
+      issue.isAuthentic = true;
+      issue.status = 'verified';
+      issue.timeline = issue.timeline || [];
+      issue.timeline.push({
+        status: 'verified',
+        timestamp: new Date(),
+        updatedBy: req.userId,
+        note: 'Community verified (3+ verifications)'
+      });
+    }
+    
+    await issue.save();
     
     // Update user's verified issues count and trust score
     await User.findByIdAndUpdate(req.userId, {
       $inc: { issuesVerified: 1, trustScore: 1 }
     });
     
+    // Fetch the updated issue with populated fields
+    issue = await Issue.findById(req.params.id)
+      .populate('reportedBy', 'name avatar')
+      .populate('verifiedBy', 'name')
+      .populate('assignedTo', 'name email');
+    
     res.json({
       success: true,
-      message: 'Issue verified',
-      data: {
-        verifications: issue.verifications,
-        isAuthentic: issue.isAuthentic
-      }
+      message: 'Issue verified successfully',
+      data: issue
     });
   } catch (error) {
     console.error('Verify issue error:', error);

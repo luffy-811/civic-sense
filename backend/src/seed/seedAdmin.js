@@ -16,7 +16,7 @@ const User = require('../models/User');
 const DEFAULT_ADMIN = {
   name: 'System Admin',
   email: 'admin@civicsense.com',
-  password: 'admin123',
+  password: 'CivicAdmin@2025!Secure',
   role: 'admin'
 };
 
@@ -25,28 +25,28 @@ const DEMO_ACCOUNTS = [
   {
     name: 'Roads Department',
     email: 'roads@civicsense.com',
-    password: 'authority123',
+    password: 'RoadsAuth@2025!Dept',
     role: 'authority',
     department: 'roads'
   },
   {
     name: 'Sanitation Department',
     email: 'sanitation@civicsense.com',
-    password: 'authority123',
+    password: 'SanitAuth@2025!Dept',
     role: 'authority',
     department: 'sanitation'
   },
   {
     name: 'Water Department',
     email: 'water@civicsense.com',
-    password: 'authority123',
+    password: 'WaterAuth@2025!Dept',
     role: 'authority',
     department: 'water'
   },
   {
     name: 'Electricity Department',
     email: 'electricity@civicsense.com',
-    password: 'authority123',
+    password: 'ElectAuth@2025!Dept',
     role: 'authority',
     department: 'electricity'
   }

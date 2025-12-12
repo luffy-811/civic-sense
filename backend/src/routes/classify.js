@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { classifyImage, getCategories, CIVIC_CATEGORIES } = require('../services/huggingfaceService');
+const { classifyImage, getCategories, CIVIC_CATEGORIES } = require('../services/aiClassificationService');
 
 router.post('/', async (req, res) => {
   try {
@@ -42,12 +42,12 @@ router.get('/categories', (req, res) => {
 });
 
 router.get('/health', (req, res) => {
-  const tokenConfigured = !!process.env.HF_API_TOKEN;
+  const tokenConfigured = !!process.env.GROQ_API_KEY;
   res.json({
     success: true,
     data: {
-      service: 'Hugging Face AI Classification',
-      model: 'blip-image-captioning-large',
+      service: 'Groq Vision AI Classification',
+      model: 'llama-4-scout-17b-16e-instruct',
       status: tokenConfigured ? 'configured' : 'not_configured'
     }
   });

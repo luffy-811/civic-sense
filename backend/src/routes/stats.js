@@ -39,8 +39,18 @@ router.get('/overview', async (req, res) => {
     // Calculate resolution rate
     const resolutionRate = total > 0 ? Math.round((resolved / total) * 100) : 0;
     
-    // Get user count
-    const userCount = await User.countDocuments({ isActive: true });
+    // Get active citizens count - users who have reported OR verified at least 1 issue
+    const activeCitizensCount = await User.countDocuments({
+      role: 'user',
+      isActive: true,
+      $or: [
+        { issuesReported: { $gt: 0 } },
+        { issuesVerified: { $gt: 0 } }
+      ]
+    });
+    
+    // Get total registered users count (for reference)
+    const totalUsersCount = await User.countDocuments({ role: 'user', isActive: true });
     
     // Format arrays for frontend charts
     const issuesByCategory = stats.byCategory.map(s => ({ _id: s._id, count: s.count }));
@@ -56,7 +66,9 @@ router.get('/overview', async (req, res) => {
         pending,
         inProgress,
         resolutionRate,
-        userCount,
+        userCount: activeCitizensCount, // Active citizens who have contributed
+        activeCitizens: activeCitizensCount, // Explicit field name
+        totalUsers: totalUsersCount, // Total registered users
         byStatus,
         byCategory,
         bySeverity,

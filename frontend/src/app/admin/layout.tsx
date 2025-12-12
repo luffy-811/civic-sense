@@ -1,25 +1,20 @@
-/**
- * Admin Layout
- * Professional sidebar navigation for admin pages
- */
-
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
   ChartBarIcon,
   ExclamationCircleIcon,
   Cog6ToothIcon,
-  ArrowLeftOnRectangleIcon,
+  HomeIcon,
   Bars3Icon,
   XMarkIcon,
-  HomeIcon
+  SparklesIcon,
+  ChevronLeftIcon
 } from '@heroicons/react/24/outline';
 import { useAuthStore, useHasHydrated } from '@/store/authStore';
 import clsx from 'clsx';
-import { useState } from 'react';
 
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: ChartBarIcon },
@@ -27,27 +22,19 @@ const navigation = [
   { name: 'Settings', href: '/admin/settings', icon: Cog6ToothIcon },
 ];
 
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, isAuthenticated, isLoading: loading } = useAuthStore();
   const hasHydrated = useHasHydrated();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
-  // Don't apply layout to admin login page
   const isLoginPage = pathname === '/admin/login';
 
   useEffect(() => {
-    // Skip redirect logic for login page
     if (isLoginPage) return;
-    
-    // Wait for hydration before making auth decisions
     if (!hasHydrated) return;
-    
     if (!loading && !isAuthenticated) {
       router.push('/admin/login');
     } else if (!loading && user && !['admin', 'authority'].includes(user.role)) {
@@ -55,114 +42,119 @@ export default function AdminLayout({
     }
   }, [loading, isAuthenticated, user, router, isLoginPage, hasHydrated]);
 
-  // For login page, just render children without layout
-  if (isLoginPage) {
-    return <>{children}</>;
-  }
+  if (isLoginPage) return <>{children}</>;
 
-  // Show loading while hydrating or checking auth
   if (!hasHydrated || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading Admin Panel...</p>
+          <div className="relative w-20 h-20 mx-auto mb-6">
+            <div className="absolute inset-0 rounded-full border-4 border-purple-500/30"></div>
+            <div className="absolute inset-0 rounded-full border-4 border-purple-400 border-t-transparent animate-spin"></div>
+            <SparklesIcon className="absolute inset-0 m-auto w-8 h-8 text-purple-400 animate-pulse" />
+          </div>
+          <p className="text-purple-200 font-medium">Loading Admin Panel...</p>
         </div>
       </div>
     );
   }
 
-  if (!isAuthenticated || !user || !['admin', 'authority'].includes(user.role)) {
-    return null;
-  }
+  if (!isAuthenticated || !user || !['admin', 'authority'].includes(user.role)) return null;
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Mobile sidebar overlay */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      {/* Mobile overlay */}
       {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
+        <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
       {/* Sidebar */}
-      <aside
-        className={clsx(
-          'fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-slate-900 to-slate-800 shadow-xl transform transition-transform lg:translate-x-0 lg:static lg:inset-auto',
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        )}
-      >
-        {/* Logo Section */}
-        <div className="flex items-center justify-between h-16 px-6 border-b border-slate-700">
-          <Link href="/admin" className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
-              <ChartBarIcon className="w-5 h-5 text-white" />
+      <aside className={clsx(
+        'fixed inset-y-0 left-0 z-50 bg-white/5 backdrop-blur-2xl border-r border-white/10 shadow-2xl transition-all duration-300 ease-in-out',
+        'lg:translate-x-0',
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full',
+        collapsed ? 'lg:w-20' : 'lg:w-64',
+        'w-72'
+      )}>
+        {/* Header */}
+        <div className="flex items-center justify-between h-16 px-4 border-b border-white/10">
+          <Link href="/admin" className="flex items-center gap-3 overflow-hidden">
+            <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/30">
+              <SparklesIcon className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl font-bold text-white">Admin Panel</span>
+            <span className={clsx('text-xl font-bold text-white whitespace-nowrap transition-opacity duration-300', collapsed ? 'lg:opacity-0 lg:w-0' : 'opacity-100')}>
+              CivicSense
+            </span>
           </Link>
-          <button
-            onClick={() => setSidebarOpen(false)}
-            className="lg:hidden p-1 text-slate-400 hover:text-white transition-colors"
-          >
-            <XMarkIcon className="w-6 h-6" />
+          <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-all">
+            <XMarkIcon className="w-5 h-5" />
           </button>
         </div>
 
         {/* Navigation */}
-        <nav className="p-4 space-y-2 flex-1">
-          <p className="px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
-            Management
-          </p>
-          {navigation.map((item) => (
-            <Link
-              key={item.name}
-              href={item.href}
-              onClick={() => setSidebarOpen(false)}
-              className={clsx(
-                'flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200',
-                pathname === item.href
-                  ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
-                  : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'
-              )}
-            >
-              <item.icon className="w-5 h-5 mr-3" />
-              {item.name}
-            </Link>
-          ))}
+        <nav className="p-3 space-y-1 flex-1">
+          {!collapsed && <p className="px-3 py-2 text-xs font-semibold text-purple-300/70 uppercase tracking-wider">Management</p>}
+          {navigation.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                onClick={() => setSidebarOpen(false)}
+                className={clsx(
+                  'flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all duration-200 group',
+                  isActive
+                    ? 'bg-gradient-to-r from-purple-500/30 to-pink-500/30 text-white shadow-lg border border-purple-500/30'
+                    : 'text-purple-200/70 hover:bg-white/5 hover:text-white'
+                )}
+              >
+                <div className={clsx('flex-shrink-0 p-2 rounded-lg transition-all', isActive ? 'bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg' : 'bg-white/5 group-hover:bg-white/10')}>
+                  <item.icon className="w-5 h-5" />
+                </div>
+                <span className={clsx('whitespace-nowrap transition-opacity duration-300', collapsed ? 'lg:opacity-0 lg:w-0 lg:hidden' : 'opacity-100')}>{item.name}</span>
+                {isActive && !collapsed && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse"></div>}
+              </Link>
+            );
+          })}
         </nav>
 
-        {/* Back to Site */}
-        <div className="p-4 border-t border-slate-700">
-          <Link
-            href="/"
-            className="flex items-center px-4 py-3 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-700/50 hover:text-white transition-all duration-200"
-          >
-            <HomeIcon className="w-5 h-5 mr-3" />
-            Back to Site
+        {/* Footer */}
+        <div className="p-3 border-t border-white/10 space-y-1">
+          <Link href="/" className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-purple-200/70 hover:bg-white/5 hover:text-white transition-all group">
+            <div className="flex-shrink-0 p-2 rounded-lg bg-white/5 group-hover:bg-white/10 transition-all">
+              <HomeIcon className="w-5 h-5" />
+            </div>
+            <span className={clsx('whitespace-nowrap transition-opacity duration-300', collapsed ? 'lg:opacity-0 lg:w-0 lg:hidden' : 'opacity-100')}>Back to Site</span>
           </Link>
+          
+          {/* Collapse button - desktop only */}
+          <button onClick={() => setCollapsed(!collapsed)} className="hidden lg:flex w-full items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-purple-200/70 hover:bg-white/5 hover:text-white transition-all group">
+            <div className="flex-shrink-0 p-2 rounded-lg bg-white/5 group-hover:bg-white/10 transition-all">
+              <ChevronLeftIcon className={clsx('w-5 h-5 transition-transform duration-300', collapsed && 'rotate-180')} />
+            </div>
+            <span className={clsx('whitespace-nowrap transition-opacity duration-300', collapsed ? 'lg:opacity-0 lg:w-0 lg:hidden' : 'opacity-100')}>Collapse</span>
+          </button>
         </div>
       </aside>
 
-      {/* Main content */}
-      <div className="lg:pl-64 flex-1 flex flex-col min-h-screen">
-        {/* Top bar */}
-        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-200 lg:hidden">
+      {/* Main content area */}
+      <div className={clsx('transition-all duration-300 ease-in-out', collapsed ? 'lg:ml-20' : 'lg:ml-64')}>
+        {/* Mobile header */}
+        <header className="sticky top-0 z-30 lg:hidden bg-white/5 backdrop-blur-xl border-b border-white/10">
           <div className="flex items-center justify-between h-16 px-4">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-            >
+            <button onClick={() => setSidebarOpen(true)} className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all">
               <Bars3Icon className="w-6 h-6" />
             </button>
-            <span className="text-lg font-bold bg-gradient-to-r from-primary-600 to-primary-500 bg-clip-text text-transparent">
-              Admin Panel
-            </span>
+            <div className="flex items-center gap-2">
+              <SparklesIcon className="w-6 h-6 text-purple-400" />
+              <span className="text-lg font-bold text-white">Admin</span>
+            </div>
             <div className="w-10" />
           </div>
         </header>
 
-        <main className="flex-1 p-6 bg-gray-50">{children}</main>
+        {/* Page content */}
+        <main className="min-h-screen">{children}</main>
       </div>
     </div>
   );

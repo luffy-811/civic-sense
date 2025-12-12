@@ -145,7 +145,9 @@ export interface StatsOverview {
   pending: number;
   inProgress: number;
   resolutionRate: number;
-  userCount: number;
+  userCount: number; // Active citizens who contributed
+  activeCitizens: number; // Same as userCount (explicit)
+  totalUsers: number; // All registered users
   byStatus: Record<string, number>;
   byCategory: Record<string, number>;
   bySeverity: Record<string, number>;

@@ -129,27 +129,48 @@ export default function HomePage() {
               </div>
             </div>
             
-            <div className="hidden lg:block relative">
-              <div className="relative z-10 bg-white rounded-2xl shadow-2xl p-6 transform rotate-2 hover:rotate-0 transition-transform duration-300">
-                <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl p-4">
-                  <div className="aspect-video bg-gray-300 rounded-lg flex items-center justify-center">
-                    <MapPinIcon className="w-16 h-16 text-gray-400" />
-                  </div>
-                </div>
-                <div className="mt-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="badge badge-severity-high">High Severity</span>
-                    <span className="text-sm text-gray-500">2 hrs ago</span>
-                  </div>
-                  <h3 className="font-semibold text-gray-900">Large pothole on Main St</h3>
-                  <div className="flex items-center text-sm text-gray-500">
-                    <CheckBadgeIcon className="w-4 h-4 mr-1 text-green-500" />
-                    Verified by 5 citizens
+            <div className="hidden lg:block relative group animate-float">
+              {/* Main Image Container with animations */}
+              <div className="relative z-10 rounded-3xl shadow-2xl overflow-hidden transform transition-all duration-500 ease-out group-hover:scale-105 group-hover:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5)] animate-glow">
+                {/* Animated border gradient */}
+                <div className="absolute inset-0 bg-gradient-to-r from-primary-400 via-white to-primary-400 opacity-50 animate-pulse"></div>
+                <div className="relative m-1 rounded-3xl overflow-hidden">
+                  <Image
+                    src="/hero-image.jpg"
+                    alt="Civic Issues - Report & Repair"
+                    width={700}
+                    height={470}
+                    className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-110"
+                    priority
+                  />
+                  {/* Overlay gradient on hover */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  
+                  {/* Floating badge */}
+                  <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">
+                    <div className="bg-white/95 backdrop-blur-sm rounded-xl p-4 shadow-lg">
+                      <div className="flex items-center justify-between">
+                        <span className="badge badge-severity-high animate-pulse">Multiple Issues Detected</span>
+                        <span className="text-sm text-gray-600 font-medium">AI Powered</span>
+                      </div>
+                      <p className="text-gray-700 text-sm mt-2">Pothole • Garbage • Air Pollution • Water Leakage</p>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-primary-400 rounded-full opacity-50 blur-2xl"></div>
-              <div className="absolute -top-6 -right-6 w-24 h-24 bg-primary-300 rounded-full opacity-50 blur-xl"></div>
+              
+              {/* Animated decorative elements */}
+              <div className="absolute -bottom-8 -left-8 w-40 h-40 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full opacity-60 blur-3xl animate-pulse"></div>
+              <div className="absolute -top-8 -right-8 w-32 h-32 bg-gradient-to-br from-primary-300 to-primary-500 rounded-full opacity-60 blur-2xl animate-bounce" style={{ animationDuration: '3s' }}></div>
+              <div className="absolute top-1/2 -right-4 w-20 h-20 bg-white/20 rounded-full blur-xl animate-ping" style={{ animationDuration: '2s' }}></div>
+              
+              {/* Floating icons */}
+              <div className="absolute -top-4 left-10 bg-white rounded-full p-3 shadow-lg animate-bounce" style={{ animationDuration: '2s', animationDelay: '0.5s' }}>
+                <CameraIcon className="w-6 h-6 text-primary-600" />
+              </div>
+              <div className="absolute -bottom-4 right-10 bg-white rounded-full p-3 shadow-lg animate-bounce" style={{ animationDuration: '2.5s', animationDelay: '1s' }}>
+                <CheckBadgeIcon className="w-6 h-6 text-green-500" />
+              </div>
             </div>
           </div>
         </div>

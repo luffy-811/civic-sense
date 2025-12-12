@@ -76,15 +76,23 @@ export default function IssueDetailPage() {
       return;
     }
 
+    if (!issue) {
+      toast.error('Issue not loaded');
+      return;
+    }
+
     setVerifying(true);
     try {
-      const response = await issuesAPI.verify(issue!._id, isReal);
+      const issueId = issue._id || issue.id;
+      const response = await issuesAPI.verify(issueId, isReal);
       if (response.data.success) {
         setIssue(response.data.data);
-        toast.success(`Issue marked as ${isReal ? 'real' : 'fake'}`);
+        toast.success(`Issue verified successfully!`);
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Verification failed');
+      const errorMessage = error.response?.data?.message || 'Failed to verify issue';
+      toast.error(errorMessage);
+      console.error('Verification error:', error);
     } finally {
       setVerifying(false);
     }
@@ -93,7 +101,22 @@ export default function IssueDetailPage() {
   // Check if current user has already verified
   const hasVerified = () => {
     if (!user || !issue) return false;
-    return issue.verifiedBy?.includes(user.id);
+    if (!issue.verifiedBy || issue.verifiedBy.length === 0) return false;
+    
+    // Handle both populated (object with _id) and unpopulated (string) cases
+    return issue.verifiedBy.some((v: any) => {
+      const verifierId = typeof v === 'string' ? v : (v._id || v.id);
+      return verifierId === user.id || verifierId === user._id;
+    });
+  };
+
+  // Check if user is the reporter
+  const isReporter = () => {
+    if (!user || !issue) return false;
+    const reporterId = typeof issue.reportedBy === 'string' 
+      ? issue.reportedBy 
+      : (issue.reportedBy?._id || issue.reportedBy?.id);
+    return reporterId === user.id || reporterId === user._id;
   };
 
   if (loading) {
@@ -234,7 +257,11 @@ export default function IssueDetailPage() {
                 )}
               </div>
 
-              {!hasVerified() ? (
+              {isReporter() ? (
+                <p className="text-center text-gray-500 py-2">
+                  You cannot verify your own issue
+                </p>
+              ) : !hasVerified() ? (
                 <div className="flex gap-3">
                   <button
                     onClick={() => handleVerify(true)}
